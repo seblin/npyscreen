@@ -172,7 +172,10 @@ but in most cases the add_handers or add_complex_handlers methods are what you w
         else:
             if mouse_event:
                 curses.ungetmouse(*mouse_event)
-                ch = self.parent.curses_pad.getch()
+                try:
+                    ch = self.parent.curses_pad.get_wch()
+                except AttributeError:
+                    ch = self.parent.curses_pad.getch()
                 assert ch == curses.KEY_MOUSE
             self.editing = False
             self.how_exited = EXITED_MOUSE
@@ -473,16 +476,15 @@ big a given widget is ... use .height and .width instead"""
         self.update()
         
     def _get_ch(self):
-        #try:
-        #    # Python3.3 and above - returns unicode
-        #    ch = self.parent.curses_pad.get_wch()
-        #    self._last_get_ch_was_unicode = True
-        #except AttributeError:
-            
-        # For now, disable all attempt to use get_wch()
-        # but everything that follows could be in the except clause above.
+        try:
+            # Python3.3 and above - returns unicode
+            ch = self.parent.curses_pad.get_wch()
+            self._last_get_ch_was_unicode = True
+            return ch
+        except AttributeError:
+            pass
         
-            # Try to read utf-8 if possible.
+        # Try to read utf-8 if possible.
         _stored_bytes =[]
         self._last_get_ch_was_unicode = True
         global ALLOW_NEW_INPUT
@@ -569,7 +571,10 @@ big a given widget is ... use .height and .width instead"""
             if ch == curses.ascii.ESC:
                 #self.parent.curses_pad.timeout(1)
                 self.parent.curses_pad.nodelay(1)
-                ch2 = self.parent.curses_pad.getch()
+                try:
+                    ch2 = self.parent.curses_pad.get_wch()
+                except AttributeError:
+                    ch2 = self.parent.curses_pad.getch()
                 if ch2 != -1: 
                     ch = curses.ascii.alt(ch2)
                 self.parent.curses_pad.timeout(-1) # back to blocking mode
